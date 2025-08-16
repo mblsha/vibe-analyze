@@ -22,16 +22,19 @@ jobs:
           python-version: ${{ matrix.python-version }}
           enable-cache: true
 
-      - name: Sync project deps (with tests)
+      - name: Sync project deps (with tests + lint)
         run: uv sync --extra test --extra lint --frozen || uv sync --extra test --extra lint
 
       - name: Ruff format check
-        run: uvx ruff format --check
+        run: uv run ruff format --check
 
       - name: Ruff lint
-        run: uvx ruff check --output-format=github
+        run: uv run ruff check --output-format=github
+
+      - name: Mypy type check
+        run: uv run mypy src
 
       - name: Run tests
         env:
           GOOGLE_API_KEY: DUMMY
-        run: uv run -m pytest -q
+        run: uv run -m pytest -q -n auto

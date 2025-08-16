@@ -1,0 +1,30 @@
+name: Auto Format
+
+on:
+  workflow_dispatch:
+
+jobs:
+  format:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Setup uv
+        uses: astral-sh/setup-uv@v6
+        with:
+          enable-cache: true
+
+      - name: Install deps (lint only)
+        run: uv sync --extra lint --frozen || uv sync --extra lint
+
+      - name: Run Ruff format
+        run: uv run ruff format
+
+      - name: Create PR with formatting changes
+        uses: peter-evans/create-pull-request@v6
+        with:
+          commit-message: "chore(fmt): apply Ruff formatting"
+          title: "chore(fmt): apply Ruff formatting"
+          body: "Automated formatting via Ruff."
+          branch: chore/apply-ruff-format
+          delete-branch: true

@@ -20,9 +20,13 @@ build-backend = "setuptools.build_meta"
 [project.optional-dependencies]
 test = [
   "pytest>=7.0",
+  "pytest-xdist>=3.5.0",
 ]
 lint = [
   "ruff>=0.5.0",
+  "pre-commit>=3.7.0",
+  "mypy>=1.10.0",
+  "types-PyYAML>=6.0.12",
 ]
 
 [tool.ruff]
@@ -30,10 +34,22 @@ line-length = 120
 target-version = "py39"
 
 [tool.ruff.lint]
-select = ["E", "F", "I"]
+select = ["E", "F", "I", "UP", "B", "SIM", "PL"]
 ignore = []
 
 [tool.ruff.format]
 quote-style = "double"
 indent-style = "space"
 line-ending = "lf"
+
+[tool.mypy]
+python_version = "3.9"
+warn_unused_configs = true
+ignore_missing_imports = true
+warn_redundant_casts = true
+warn_unused_ignores = true
+warn_return_any = false
+disallow_untyped_defs = false
+
+[tool.uv]
+required-version = ">=0.8.0"

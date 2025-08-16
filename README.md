@@ -7,8 +7,16 @@ Quick start (uv):
 - Create venv and install deps: `uv sync --extra test --extra lint`
 - Env: set `GOOGLE_API_KEY` for Gemini (or use a dummy for tests).
 - Run CLI: `uv run vibe-analyze --request "How does auth flow work?" --verbose`
-- Run lints: `uvx ruff check && uvx ruff format --check`
+- Run lints: `uv run ruff check && uv run ruff format --check`
 - Run tests: `uv run -m pytest -q`
+
+Pre-commit:
+- Install hooks: `uv run pre-commit install`
+- Run all hooks: `uv run pre-commit run -a`
+
+Determinism:
+- CI uses `uv run` for tools (Ruff, mypy, pytest) so versions come from `uv.lock`.
+- `pyproject.toml` pins `[tool.uv] required-version` to ensure a compatible uv.
 
 See `src/vibe_analyze/cli.py` for available flags.
 

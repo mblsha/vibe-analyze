@@ -1,0 +1,31 @@
+name: Weekly Lock Update
+
+on:
+  schedule:
+    - cron: "23 3 * * 1"  # Mondays at 03:23 UTC
+  workflow_dispatch:
+
+jobs:
+  lock:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Setup uv
+        uses: astral-sh/setup-uv@v6
+        with:
+          enable-cache: true
+
+      - name: Update lock (test + lint extras)
+        run: |
+          uv sync --extra test --extra lint
+          uv lock --upgrade
+
+      - name: Create PR with updated lockfile
+        uses: peter-evans/create-pull-request@v6
+        with:
+          commit-message: "build(deps): weekly uv.lock refresh"
+          title: "build(deps): weekly uv.lock refresh"
+          body: "Automated weekly update of uv.lock with test+lint extras."
+          branch: chore/weekly-uv-lock
+          delete-branch: true
