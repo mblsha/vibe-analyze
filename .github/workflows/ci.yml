@@ -23,7 +23,7 @@ jobs:
           enable-cache: true
 
       - name: Sync project deps (with tests + lint)
-        run: uv sync --extra test --extra lint --frozen || uv sync --extra test --extra lint
+        run: uv sync --extra test --extra lint --frozen
 
       - name: Ruff format check
         run: uv run ruff format --check
