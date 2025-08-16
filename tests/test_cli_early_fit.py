@@ -3,7 +3,6 @@
 
 from pathlib import Path
 from vibe_analyze import cli
-from vibe_analyze import selector
 
 
 def write(p: Path, content: str):
