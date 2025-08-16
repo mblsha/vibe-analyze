@@ -15,7 +15,6 @@ from .util import (
     FileInfo,
     redact_high_entropy,
     read_yaml_if_exists,
-    parse_ranked_lines,
     collect_import_refs,
     best_effort_resolve_refs_to_paths,
 )

@@ -1,7 +1,6 @@
 import os
-import json
 import subprocess
-from typing import List, Tuple
+from typing import List
 from .util import which_fd, DEFAULT_EXCLUDES
 
 
@@ -53,4 +52,3 @@ def discover_files(root: str, excludes: List[str] = None) -> List[str]:
     if paths:
         return sorted(paths)
     return sorted(_walk_fallback(root, excludes))
-

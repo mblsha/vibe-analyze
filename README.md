@@ -4,9 +4,10 @@ This CLI scans a repo, builds a compact project overview, enforces token budgets
 
 Quick start (uv):
 - Install uv: see https://github.com/astral-sh/uv
-- Create venv and install deps: `uv sync --extra test`
+- Create venv and install deps: `uv sync --extra test --extra lint`
 - Env: set `GOOGLE_API_KEY` for Gemini (or use a dummy for tests).
 - Run CLI: `uv run vibe-analyze --request "How does auth flow work?" --verbose`
+- Run lints: `uvx ruff check && uvx ruff format --check`
 - Run tests: `uv run -m pytest -q`
 
 See `src/vibe_analyze/cli.py` for available flags.

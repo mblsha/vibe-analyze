@@ -4,7 +4,6 @@ import sys
 import math
 import fnmatch
 import shutil
-import pathlib
 from dataclasses import dataclass
 from typing import Iterable, List, Tuple, Dict, Optional, Set
 
@@ -228,4 +227,3 @@ def best_effort_resolve_refs_to_paths(refs: Set[str], all_paths: List[str]) -> S
             if pl.endswith("/" + base) or pl.endswith(base):
                 chosen.add(p)
     return chosen
-

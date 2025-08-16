@@ -23,10 +23,15 @@ jobs:
           enable-cache: true
 
       - name: Sync project deps (with tests)
-        run: uv sync --extra test --frozen
+        run: uv sync --extra test --extra lint --frozen || uv sync --extra test --extra lint
+
+      - name: Ruff format check
+        run: uvx ruff format --check
+
+      - name: Ruff lint
+        run: uvx ruff check --output-format=github
 
       - name: Run tests
         env:
           GOOGLE_API_KEY: DUMMY
         run: uv run -m pytest -q
-

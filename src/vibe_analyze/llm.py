@@ -1,5 +1,4 @@
 import os
-import time
 from typing import Optional
 from .util import eprint
 
@@ -58,4 +57,3 @@ class GeminiClient:
         except Exception as e:
             eprint(f"LLM error: {e}")
             return ""
-

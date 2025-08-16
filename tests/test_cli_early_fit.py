@@ -1,6 +1,5 @@
 import os
 from pathlib import Path
-import io
 
 import vibe_analyze.cli as cli
 import vibe_analyze.selector as selector
@@ -56,4 +55,3 @@ def test_early_fit_skips_selection_and_blocks_secrets(tmp_path, monkeypatch, cap
     assert captured_cxml["text"] is not None
     assert "<files>" in captured_cxml["text"]
     assert "src/app.py" in captured_cxml["text"]
-
