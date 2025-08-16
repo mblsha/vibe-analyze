@@ -1,5 +1,6 @@
 import os
 import subprocess
+from typing import Optional
 
 from .util import DEFAULT_EXCLUDES, is_path_excluded, which_fd
 
@@ -41,9 +42,6 @@ def _walk_fallback(root: str, excludes: list[str]) -> list[str]:
             if not is_path_excluded(rel_unix, excludes):
                 out.append(full)
     return out
-
-
-from typing import Optional
 
 
 def discover_files(root: str, excludes: Optional[list[str]] = None) -> list[str]:
