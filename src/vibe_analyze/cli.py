@@ -54,13 +54,17 @@ def assemble_overview(root: str, tree_depth: int = 4) -> str:
     readmes = list_readme_files(root)
     parts: List[str] = []
     if readmes:
-        parts.append("READMEs:\n" + "\n".join([f"## {os.path.relpath(p, root)}\n" + read_text_safe(p, 200_000) for p in readmes]))
+        parts.append(
+            "READMEs:\n" + "\n".join([f"## {os.path.relpath(p, root)}\n" + read_text_safe(p, 200_000) for p in readmes])
+        )
     tree = build_compact_tree(root, depth=tree_depth)
     parts.append("COMPACT DIRECTORY TREE (counts, sizes):\n" + tree)
     return "\n\n".join(parts)
 
 
-def stat_and_filter(files: List[str], root: str, file_cap: int, allow_secrets: bool) -> Tuple[Dict[str, FileInfo], List[str]]:
+def stat_and_filter(
+    files: List[str], root: str, file_cap: int, allow_secrets: bool
+) -> Tuple[Dict[str, FileInfo], List[str]]:
     infos: Dict[str, FileInfo] = {}
     blocked: List[str] = []
     for path in files:
@@ -74,6 +78,7 @@ def stat_and_filter(files: List[str], root: str, file_cap: int, allow_secrets: b
         if size > file_cap:
             info.oversized = True
             from .util import human_size
+
             eprint(f"SKIPPED (too large): {rel} [size={human_size(size)}, cap={human_size(file_cap)}]")
             continue
         if not allow_secrets and is_secret_blocklisted(rel):
@@ -112,9 +117,12 @@ def fits_early(request: str, overview: str, infos: Dict[str, FileInfo], headroom
     return tokens <= int((1.0 - headroom) * 1_000_000)
 
 
-def cxml_bundle(files: List[Tuple[int, str]], info_map: Dict[str, FileInfo], request: str, overview: str, root: str) -> Tuple[str, str]:
+def cxml_bundle(
+    files: List[Tuple[int, str]], info_map: Dict[str, FileInfo], request: str, overview: str, root: str
+) -> Tuple[str, str]:
     # Build a temporary directory with redacted file contents, then invoke files-to-prompt --cxml via plumbum
     from plumbum import local
+
     tmpdir_obj = tempfile.TemporaryDirectory(prefix="vibe_f2p_")
     tmpdir = tmpdir_obj.name
     # Write files preserving relative paths
@@ -152,13 +160,16 @@ def cxml_bundle(files: List[Tuple[int, str]], info_map: Dict[str, FileInfo], req
 
 def analyze(system: str, user_cxml: str, model: str, timeout_s: int) -> str:
     from .llm import GeminiClient
+
     client = GeminiClient(model=model, temperature=0.2, timeout_s=timeout_s)
     if not client.ready():
         raise RuntimeError(client.error() or "Gemini not ready")
     return client.generate(system=system, user=user_cxml)
 
 
-def budgeted_pack(prioritized: List[Tuple[int, str]], info_map: Dict[str, FileInfo], headroom: float, request: str, overview: str) -> List[Tuple[int, str]]:
+def budgeted_pack(
+    prioritized: List[Tuple[int, str]], info_map: Dict[str, FileInfo], headroom: float, request: str, overview: str
+) -> List[Tuple[int, str]]:
     # prioritize shorter files within same priority
     grouped: Dict[int, List[str]] = {}
     for pr, rel in prioritized:
@@ -180,7 +191,9 @@ def budgeted_pack(prioritized: List[Tuple[int, str]], info_map: Dict[str, FileIn
     return out
 
 
-def fallback_mode_b(seed_ranked: List[Tuple[int, str]], root: str, info_map: Dict[str, FileInfo]) -> List[Tuple[int, str]]:
+def fallback_mode_b(
+    seed_ranked: List[Tuple[int, str]], root: str, info_map: Dict[str, FileInfo]
+) -> List[Tuple[int, str]]:
     # Seed with top-K
     K = min(50, len(seed_ranked))
     seeds = [r for _, r in seed_ranked[:K] if r in info_map]
@@ -261,6 +274,7 @@ def main(argv: Optional[List[str]] = None) -> int:
     # Expand stage1 globs/dirs via discovery again; pragmatic: just filter known files by matching prefix/glob
     expanded: List[str] = []
     from fnmatch import fnmatch
+
     all_rels = [os.path.relpath(p, root).replace("\\", "/") for p in files]
     for pr, pat in st1[:max_stage1]:
         pat = pat.replace("\\", "/")
@@ -274,7 +288,9 @@ def main(argv: Optional[List[str]] = None) -> int:
         expanded = all_rels[:max_stage2]
 
     # Stage 2 rank
-    st2 = stage2_select(args.request, overview, expanded[:max_stage2], selector_model, mode="C", timeout_s=args.timeout_s)
+    st2 = stage2_select(
+        args.request, overview, expanded[:max_stage2], selector_model, mode="C", timeout_s=args.timeout_s
+    )
     prioritized = st2 if st2 else [(50, rel) for rel in expanded[:max_stage2]]
 
     # 5) Assembly & budgeting (Mode C)

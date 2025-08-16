@@ -10,4 +10,3 @@ def pytest_sessionstart(session):
     sys.path.insert(0, str(src))
     # Provide a dummy Gemini key in case something leaks
     os.environ.setdefault("GOOGLE_API_KEY", "DUMMY")
-

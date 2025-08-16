@@ -22,6 +22,7 @@ def _fd_cmd(root: str, excludes: List[str]) -> List[str]:
 
 def _walk_fallback(root: str, excludes: List[str]) -> List[str]:
     from .util import is_path_excluded
+
     root = os.path.abspath(root)
     out: List[str] = []
     for dirpath, dirnames, filenames in os.walk(root):

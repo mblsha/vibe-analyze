@@ -20,6 +20,7 @@ class GeminiClient:
             return
         try:
             import google.generativeai as genai  # type: ignore
+
             genai.configure(api_key=api_key)
             self._client = genai.GenerativeModel(self.model)
             self._ready = True
@@ -37,14 +38,17 @@ class GeminiClient:
             raise RuntimeError(self._err or "Gemini not ready")
         # google-generativeai supports system via contents with role, but expose simply
         try:
-            resp = self._client.generate_content([
-                {"role": "system", "parts": [{"text": system}]},
-                {"role": "user", "parts": [{"text": user}]},
-            ], generation_config={
-                "temperature": self.temperature,
-                "top_p": 1,
-                "top_k": 1,
-            })
+            resp = self._client.generate_content(
+                [
+                    {"role": "system", "parts": [{"text": system}]},
+                    {"role": "user", "parts": [{"text": user}]},
+                ],
+                generation_config={
+                    "temperature": self.temperature,
+                    "top_p": 1,
+                    "top_k": 1,
+                },
+            )
             # Respect timeout by polling? The SDK handles internally; coarse enforcement
             # Extract text
             if hasattr(resp, "text") and resp.text:

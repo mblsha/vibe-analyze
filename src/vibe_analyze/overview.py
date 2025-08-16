@@ -47,4 +47,3 @@ def build_compact_tree(root: str, depth: int = 4, max_lines: int = 2000) -> str:
     if len(lines) >= max_lines:
         lines.append("… (truncated)")
     return "\n".join(lines)
-

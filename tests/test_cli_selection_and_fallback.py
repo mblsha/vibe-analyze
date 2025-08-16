@@ -44,11 +44,16 @@ def test_selection_trim_and_mode_b_fallback(tmp_path, monkeypatch, capsys):
     monkeypatch.setattr(cli, "analyze", fake_analyze)
 
     # Use extreme headroom to force small budget and trimming
-    rc = cli.main([
-        "--request", "Explain behavior",
-        "--cwd", str(repo),
-        "--headroom", "0.99",
-    ])
+    rc = cli.main(
+        [
+            "--request",
+            "Explain behavior",
+            "--cwd",
+            str(repo),
+            "--headroom",
+            "0.99",
+        ]
+    )
     assert rc == 0
     out = capsys.readouterr()
     # Stdout is the answer

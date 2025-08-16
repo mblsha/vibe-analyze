@@ -15,12 +15,14 @@ def test_files_to_prompt_cxml_output(monkeypatch, capsys):
 
     monkeypatch.setattr(cli, "analyze", fake_analyze)
 
-    rc = cli.main([
-        "--request",
-        "Summarize the sample project",
-        "--cwd",
-        str(repo),
-    ])
+    rc = cli.main(
+        [
+            "--request",
+            "Summarize the sample project",
+            "--cwd",
+            str(repo),
+        ]
+    )
     assert rc == 0
     out = capsys.readouterr()
     assert out.out.strip() == "OK"
@@ -33,4 +35,3 @@ def test_files_to_prompt_cxml_output(monkeypatch, capsys):
     # Should include our fixture files
     assert "src/app.py" in cxml
     assert "Sample Project" in cxml or "This is a tiny sample project" in cxml
-

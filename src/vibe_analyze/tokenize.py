@@ -9,6 +9,7 @@ def _load_enc():
         return _ENC
     try:
         import tiktoken  # type: ignore
+
         _ENC = tiktoken.get_encoding("cl100k_base")
     except Exception:
         _ENC = None
@@ -28,4 +29,3 @@ def count_tokens(texts: List[str]) -> int:
         except Exception:
             n += max(1, len(t) // 4)
     return n
-

@@ -8,24 +8,55 @@ from dataclasses import dataclass
 from typing import Iterable, List, Tuple, Dict, Optional, Set
 
 SECRET_BLOCKLIST_GLOBS = [
-    ".env*", "*.pem", "id_rsa*", "secrets.*", "*.key", "*.p12", "*.keystore",
+    ".env*",
+    "*.pem",
+    "id_rsa*",
+    "secrets.*",
+    "*.key",
+    "*.p12",
+    "*.keystore",
 ]
 
 DEFAULT_EXCLUDES = [
-    ".git/", ".svn/", ".hg/", "node_modules/", "dist/", "build/", ".next/", ".cache/",
-    "coverage/", "target/", "out/", "__pycache__/", ".venv/",
-    "*.png", "*.jpg", "*.jpeg", "*.gif", "*.pdf", "*.zip", "*.tar", "*.gz", "*.mp4", "*.mov",
-    "*.ogg", "*.wav", "*.webm", "*.ico", "*.woff*", "*.min.*",
+    ".git/",
+    ".svn/",
+    ".hg/",
+    "node_modules/",
+    "dist/",
+    "build/",
+    ".next/",
+    ".cache/",
+    "coverage/",
+    "target/",
+    "out/",
+    "__pycache__/",
+    ".venv/",
+    "*.png",
+    "*.jpg",
+    "*.jpeg",
+    "*.gif",
+    "*.pdf",
+    "*.zip",
+    "*.tar",
+    "*.gz",
+    "*.mp4",
+    "*.mov",
+    "*.ogg",
+    "*.wav",
+    "*.webm",
+    "*.ico",
+    "*.woff*",
+    "*.min.*",
 ]
 
 IMPORT_REGEXES = [
     re.compile(r"\b(import|require)\s*\(|\bfrom\s+['\"][^'\"]+['\"]"),  # JS/TS
-    re.compile(r"^\s*(from\s+[.\w]+\s+import|import\s+[.\w]+)", re.M),      # Python
-    re.compile(r"^\s*import\s*\(|^\s*import\s+\"[^\"]+\"", re.M),       # Go
-    re.compile(r"^\s*use\s+[a-zA-Z0-9_:]+", re.M),                               # Rust
-    re.compile(r"^\s*#\s*include\s+[<\"].+[>\"]", re.M),                    # C/C++
-    re.compile(r"^\s*import\s+[a-zA-Z0-9_.]+;", re.M),                          # Java/Kotlin
-    re.compile(r"(?i)\binclude(s)?\s*:\s*"),                                   # YAML/TOML
+    re.compile(r"^\s*(from\s+[.\w]+\s+import|import\s+[.\w]+)", re.M),  # Python
+    re.compile(r"^\s*import\s*\(|^\s*import\s+\"[^\"]+\"", re.M),  # Go
+    re.compile(r"^\s*use\s+[a-zA-Z0-9_:]+", re.M),  # Rust
+    re.compile(r"^\s*#\s*include\s+[<\"].+[>\"]", re.M),  # C/C++
+    re.compile(r"^\s*import\s+[a-zA-Z0-9_.]+;", re.M),  # Java/Kotlin
+    re.compile(r"(?i)\binclude(s)?\s*:\s*"),  # YAML/TOML
 ]
 
 
@@ -102,14 +133,16 @@ def find_high_entropy_tokens(s: str, min_len: int = 20, entropy_threshold: float
     spans: List[Tuple[int, int]] = []
     token = []
     start = None
+
     def flush():
         nonlocal token, start
         if start is not None and len(token) >= min_len:
-            t = ''.join(token)
+            t = "".join(token)
             if shannon_entropy(t) >= entropy_threshold:
                 spans.append((start, start + len(token)))
         token = []
         start = None
+
     for i, ch in enumerate(s):
         if ch.isalnum() or ch in "_-.+/=":
             if start is None:
@@ -135,7 +168,7 @@ def redact_high_entropy(s: str) -> Tuple[str, int]:
         last = b
         count += 1
     out.append(s[last:])
-    return ''.join(out), count
+    return "".join(out), count
 
 
 def read_yaml_if_exists(path: str) -> Dict:

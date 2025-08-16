@@ -39,11 +39,16 @@ def test_early_fit_skips_selection_and_blocks_secrets(tmp_path, monkeypatch, cap
 
     monkeypatch.setattr(cli, "analyze", fake_analyze)
 
-    rc = cli.main([
-        "--request", "What does app do?",
-        "--cwd", str(repo),
-        "--file-cap-bytes", "524288",  # 512KB cap so big file is skipped
-    ])
+    rc = cli.main(
+        [
+            "--request",
+            "What does app do?",
+            "--cwd",
+            str(repo),
+            "--file-cap-bytes",
+            "524288",  # 512KB cap so big file is skipped
+        ]
+    )
     assert rc == 0
     out = capsys.readouterr()
     # stdout has the answer only
