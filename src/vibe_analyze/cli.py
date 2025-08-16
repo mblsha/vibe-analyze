@@ -281,7 +281,8 @@ def main(argv: Optional[List[str]] = None) -> int:
     packed = budgeted_pack(prioritized, info_map, headroom, args.request, overview)
 
     # If too sparse (packed empty or very small) or couldn't include enough high-prio, fallback to B
-    if len(packed) < max(5, len(prioritized) // 20):
+    # Use a stricter threshold to ensure recall under tight budgets
+    if len(packed) <= max(10, len(prioritized) // 10):
         eprint("FALLBACK: switched to transitive scope (B) due to token budget")
         ranked_b = fallback_mode_b(prioritized, root, info_map)
         packed = budgeted_pack(ranked_b, info_map, headroom, args.request, overview)
