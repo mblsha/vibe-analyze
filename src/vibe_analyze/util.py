@@ -261,4 +261,6 @@ def best_effort_resolve_refs_to_paths(refs: set[str], all_paths: list[str]) -> s
             if pl.endswith("/" + base) or pl.endswith(base):
                 chosen.add(p)
     return chosen
+
+
 MIN_WORD_LEN = 3
