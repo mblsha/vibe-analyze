@@ -3,6 +3,8 @@ import sys
 import argparse
 import concurrent.futures
 from typing import List, Dict, Tuple, Optional
+import tempfile
+import pathlib
 
 from .discover import discover_files
 from .overview import build_compact_tree
@@ -110,20 +112,41 @@ def fits_early(request: str, overview: str, infos: Dict[str, FileInfo], headroom
     return tokens <= int((1.0 - headroom) * 1_000_000)
 
 
-def cxml_bundle(files: List[Tuple[int, str]], info_map: Dict[str, FileInfo], request: str, overview: str) -> Tuple[str, str]:
-    # Returns (system, user_cxml)
-    parts: List[str] = [request, "", "<files>"]
-    for prio, rel in files:
+def cxml_bundle(files: List[Tuple[int, str]], info_map: Dict[str, FileInfo], request: str, overview: str, root: str) -> Tuple[str, str]:
+    # Build a temporary directory with redacted file contents, then invoke files-to-prompt --cxml via plumbum
+    from plumbum import local
+    tmpdir_obj = tempfile.TemporaryDirectory(prefix="vibe_f2p_")
+    tmpdir = tmpdir_obj.name
+    # Write files preserving relative paths
+    for _, rel in files:
         fi = info_map.get(rel)
         if not fi or fi.content is None:
             continue
-        parts.append(f'  <file path="{rel}">')
-        parts.append("  <![CDATA[")
-        parts.append(fi.content)
-        parts.append("  ]]>\n  </file>")
-    parts.append("</files>")
-    # Prepend overview verbatim as context before files
-    cxml = f"{request}\n\nPROJECT OVERVIEW:\n{overview}\n\n" + "\n".join(parts[2:])
+        dst = pathlib.Path(tmpdir, rel)
+        dst.parent.mkdir(parents=True, exist_ok=True)
+        dst.write_text(fi.content, encoding="utf-8")
+    # Run files-to-prompt
+    try:
+        f2p = local["files-to-prompt"]
+        cxml_body = f2p["--cxml", tmpdir]().strip()
+    except Exception as ex:
+        # Fallback to internal builder if files-to-prompt unavailable
+        eprint(f"files-to-prompt failed: {ex}; falling back to internal CXML")
+        parts: List[str] = ["<files>"]
+        for _, rel in files:
+            fi = info_map.get(rel)
+            if not fi or fi.content is None:
+                continue
+            parts.append(f'  <file path="{rel}">')
+            parts.append("  <![CDATA[")
+            parts.append(fi.content)
+            parts.append("  ]]>\n  </file>")
+        parts.append("</files>")
+        cxml_body = "\n".join(parts)
+    finally:
+        tmpdir_obj.cleanup()
+    # Prepend overview and request
+    cxml = f"{request}\n\nPROJECT OVERVIEW:\n{overview}\n\n" + cxml_body
     return ANALYSIS_SYSTEM, cxml
 
 
@@ -224,7 +247,7 @@ def main(argv: Optional[List[str]] = None) -> int:
     # Early-fit check with headroom
     if fits_early(args.request, overview, info_map, headroom):
         # everything fits; analyze directly
-        system, cxml = cxml_bundle([(100, r) for r in info_map.keys()], info_map, args.request, overview)
+        system, cxml = cxml_bundle([(100, r) for r in info_map.keys()], info_map, args.request, overview, root)
         try:
             answer = analyze(system, cxml, analysis_model, args.timeout_s)
         except Exception as e:
@@ -264,7 +287,7 @@ def main(argv: Optional[List[str]] = None) -> int:
         packed = budgeted_pack(ranked_b, info_map, headroom, args.request, overview)
 
     # 6) Final send
-    system, cxml = cxml_bundle(packed, info_map, args.request, overview)
+    system, cxml = cxml_bundle(packed, info_map, args.request, overview, root)
     try:
         answer = analyze(system, cxml, analysis_model, args.timeout_s)
     except Exception as e:

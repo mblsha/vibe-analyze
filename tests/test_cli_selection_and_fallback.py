@@ -59,5 +59,4 @@ def test_selection_trim_and_mode_b_fallback(tmp_path, monkeypatch, capsys):
     # Ensure only a small number of files ended up in the CXML bundle due to budget
     cxml = captured["cxml"]
     assert cxml is not None
-    assert cxml.count("<file path=") < 20
-
+    assert cxml.count("<document index=") < 20

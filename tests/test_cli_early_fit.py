@@ -53,5 +53,5 @@ def test_early_fit_skips_selection_and_blocks_secrets(tmp_path, monkeypatch, cap
     assert "SKIPPED (too large): dist/bundle.js" in out.err
     # Ensure early-fit path included file contents and redaction did not break structure
     assert captured_cxml["text"] is not None
-    assert "<files>" in captured_cxml["text"]
+    assert "<documents>" in captured_cxml["text"]
     assert "src/app.py" in captured_cxml["text"]

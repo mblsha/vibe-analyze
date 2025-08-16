@@ -8,6 +8,8 @@ dependencies = [
   "tiktoken>=0.7.0",
   "PyYAML>=6.0",
   "google-generativeai>=0.7.2",
+  "plumbum>=1.8.3",
+  "files-to-prompt>=0.5.1",
 ]
 
 [project.scripts]
