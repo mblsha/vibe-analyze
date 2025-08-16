@@ -17,3 +17,7 @@ vibe-analyze = "vibe_analyze.cli:main"
 requires = ["setuptools>=68", "wheel"]
 build-backend = "setuptools.build_meta"
 
+[project.optional-dependencies]
+test = [
+  "pytest>=7.0",
+]
