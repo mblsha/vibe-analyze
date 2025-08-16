@@ -35,8 +35,9 @@ def test_selection_trim_and_mode_b_fallback(tmp_path, monkeypatch, capsys):
             ranked.append((pr, c))
         return ranked
 
-    monkeypatch.setattr(selector, "stage1_select", fake_stage1)
-    monkeypatch.setattr(selector, "stage2_select", fake_stage2)
+    # Patch on cli module since it imports the functions directly
+    monkeypatch.setattr(cli, "stage1_select", fake_stage1)
+    monkeypatch.setattr(cli, "stage2_select", fake_stage2)
 
     captured = {"cxml": None}
 

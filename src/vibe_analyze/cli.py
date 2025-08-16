@@ -300,9 +300,8 @@ def main(argv: Optional[list[str]] = None) -> int:
     # 5) Assembly & budgeting (Mode C)
     packed = budgeted_pack(prioritized, info_map, headroom, args.request, overview)
 
-    # If too sparse (packed empty or very small) or couldn't include enough high-prio, fallback to B
-    # Use a stricter threshold to ensure recall under tight budgets
-    if len(packed) <= max(10, len(prioritized) // 10):
+    # If we had to trim anything under Mode C, fallback to Mode B (transitive scope)
+    if len(packed) < len(prioritized):
         eprint("FALLBACK: switched to transitive scope (B) due to token budget")
         ranked_b = fallback_mode_b(prioritized, root, info_map)
         packed = budgeted_pack(ranked_b, info_map, headroom, args.request, overview)
