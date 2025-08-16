@@ -1,6 +1,8 @@
-from pathlib import Path
+"""Integration test for files-to-prompt CXML assembly."""
+# isort: skip_file
 
-import vibe_analyze.cli as cli
+from pathlib import Path
+from vibe_analyze import cli
 
 
 def test_files_to_prompt_cxml_output(monkeypatch, capsys):

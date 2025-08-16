@@ -1,8 +1,9 @@
-import os
-from pathlib import Path
+"""Early-fit behavior tests for CLI."""
+# isort: skip_file
 
-import vibe_analyze.cli as cli
-import vibe_analyze.selector as selector
+from pathlib import Path
+from vibe_analyze import cli
+from vibe_analyze import selector
 
 
 def write(p: Path, content: str):

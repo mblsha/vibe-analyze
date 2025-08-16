@@ -1,6 +1,9 @@
+"""Pytest configuration for tests."""
+# isort: skip_file
+
+import pathlib
 import os
 import sys
-import pathlib
 
 
 def pytest_sessionstart(session):

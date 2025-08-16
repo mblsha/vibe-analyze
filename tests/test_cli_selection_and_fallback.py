@@ -1,7 +1,10 @@
-from pathlib import Path
+"""Selection path and Mode B fallback tests."""
+# ruff: noqa: PLR0913
+# isort: skip_file
 
-import vibe_analyze.cli as cli
-import vibe_analyze.selector as selector
+from pathlib import Path
+from vibe_analyze import cli
+from vibe_analyze import selector
 
 
 def write(p: Path, content: str):
@@ -64,4 +67,5 @@ def test_selection_trim_and_mode_b_fallback(tmp_path, monkeypatch, capsys):
     # Ensure only a small number of files ended up in the CXML bundle due to budget
     cxml = captured["cxml"]
     assert cxml is not None
-    assert cxml.count("<document index=") < 20
+    MAX_BUNDLE_DOCS = 20
+    assert cxml.count("<document index=") < MAX_BUNDLE_DOCS

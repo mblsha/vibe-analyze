@@ -1,23 +1,13 @@
-from typing import List
+try:
+    import tiktoken  # type: ignore
 
-_ENC = None
-
-
-def _load_enc():
-    global _ENC
-    if _ENC is not None:
-        return _ENC
-    try:
-        import tiktoken  # type: ignore
-
-        _ENC = tiktoken.get_encoding("cl100k_base")
-    except Exception:
-        _ENC = None
-    return _ENC
+    _ENC = tiktoken.get_encoding("cl100k_base")
+except Exception:
+    _ENC = None
 
 
-def count_tokens(texts: List[str]) -> int:
-    enc = _load_enc()
+def count_tokens(texts: list[str]) -> int:
+    enc = _ENC
     if enc is None:
         # fallback rough estimate
         return sum(max(1, len(t) // 4) for t in texts)

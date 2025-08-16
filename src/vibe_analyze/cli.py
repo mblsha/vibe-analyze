@@ -1,12 +1,21 @@
-import os
-import sys
+"""CLI orchestration for vibe-analyze."""
+# ruff: noqa: PLR0915
+# isort: skip_file
+
 import argparse
 import concurrent.futures
-from typing import List, Dict, Tuple, Optional
-import tempfile
+import os
 import pathlib
+import sys
+import tempfile
+
+from fnmatch import fnmatch
+from typing import Optional
+
+from plumbum import local
 
 from .discover import discover_files
+from .llm import GeminiClient
 from .overview import build_compact_tree
 from .util import (
     eprint,
@@ -17,6 +26,7 @@ from .util import (
     FileInfo,
     redact_high_entropy,
     read_yaml_if_exists,
+    human_size,
     collect_import_refs,
     best_effort_resolve_refs_to_paths,
 )
@@ -31,7 +41,7 @@ ANALYSIS_SYSTEM = (
 )
 
 
-def load_cfg(root: str) -> Dict:
+def load_cfg(root: str) -> dict:
     cfg = {
         "headroom": 0.15,
         "file_cap_bytes": 524288,
@@ -52,7 +62,7 @@ def load_cfg(root: str) -> Dict:
 
 def assemble_overview(root: str, tree_depth: int = 4) -> str:
     readmes = list_readme_files(root)
-    parts: List[str] = []
+    parts: list[str] = []
     if readmes:
         parts.append(
             "READMEs:\n" + "\n".join([f"## {os.path.relpath(p, root)}\n" + read_text_safe(p, 200_000) for p in readmes])
@@ -63,10 +73,10 @@ def assemble_overview(root: str, tree_depth: int = 4) -> str:
 
 
 def stat_and_filter(
-    files: List[str], root: str, file_cap: int, allow_secrets: bool
-) -> Tuple[Dict[str, FileInfo], List[str]]:
-    infos: Dict[str, FileInfo] = {}
-    blocked: List[str] = []
+    files: list[str], root: str, file_cap: int, allow_secrets: bool
+) -> tuple[dict[str, FileInfo], list[str]]:
+    infos: dict[str, FileInfo] = {}
+    blocked: list[str] = []
     for path in files:
         rel = os.path.relpath(path, root).replace("\\", "/")
         try:
@@ -77,8 +87,6 @@ def stat_and_filter(
         info = FileInfo(path=rel, size=size)
         if size > file_cap:
             info.oversized = True
-            from .util import human_size
-
             eprint(f"SKIPPED (too large): {rel} [size={human_size(size)}, cap={human_size(file_cap)}]")
             continue
         if not allow_secrets and is_secret_blocklisted(rel):
@@ -90,7 +98,7 @@ def stat_and_filter(
     return infos, blocked
 
 
-def load_and_redact(infos: Dict[str, FileInfo], root: str) -> None:
+def load_and_redact(infos: dict[str, FileInfo], root: str) -> None:
     # Parallel read and redact
     def worker(rel: str):
         p = os.path.join(root, rel)
@@ -101,14 +109,14 @@ def load_and_redact(infos: Dict[str, FileInfo], root: str) -> None:
         return rel, redacted, count
 
     with concurrent.futures.ThreadPoolExecutor(max_workers=os.cpu_count() or 4) as ex:
-        futures = [ex.submit(worker, rel) for rel in infos.keys()]
+        futures = [ex.submit(worker, rel) for rel in infos]
         for fut in concurrent.futures.as_completed(futures):
             rel, text, count = fut.result()
             infos[rel].content = text
             infos[rel].redactions = count
 
 
-def fits_early(request: str, overview: str, infos: Dict[str, FileInfo], headroom: float) -> bool:
+def fits_early(request: str, overview: str, infos: dict[str, FileInfo], headroom: float) -> bool:
     texts = [ANALYSIS_SYSTEM, request, overview]
     for fi in infos.values():
         if fi.content is not None:
@@ -118,10 +126,9 @@ def fits_early(request: str, overview: str, infos: Dict[str, FileInfo], headroom
 
 
 def cxml_bundle(
-    files: List[Tuple[int, str]], info_map: Dict[str, FileInfo], request: str, overview: str, root: str
-) -> Tuple[str, str]:
+    files: list[tuple[int, str]], info_map: dict[str, FileInfo], request: str, overview: str, root: str
+) -> tuple[str, str]:
     # Build a temporary directory with redacted file contents, then invoke files-to-prompt --cxml via plumbum
-    from plumbum import local
 
     tmpdir_obj = tempfile.TemporaryDirectory(prefix="vibe_f2p_")
     tmpdir = tmpdir_obj.name
@@ -140,7 +147,7 @@ def cxml_bundle(
     except Exception as ex:
         # Fallback to internal builder if files-to-prompt unavailable
         eprint(f"files-to-prompt failed: {ex}; falling back to internal CXML")
-        parts: List[str] = ["<files>"]
+        parts: list[str] = ["<files>"]
         for _, rel in files:
             fi = info_map.get(rel)
             if not fi or fi.content is None:
@@ -159,8 +166,6 @@ def cxml_bundle(
 
 
 def analyze(system: str, user_cxml: str, model: str, timeout_s: int) -> str:
-    from .llm import GeminiClient
-
     client = GeminiClient(model=model, temperature=0.2, timeout_s=timeout_s)
     if not client.ready():
         raise RuntimeError(client.error() or "Gemini not ready")
@@ -168,16 +173,16 @@ def analyze(system: str, user_cxml: str, model: str, timeout_s: int) -> str:
 
 
 def budgeted_pack(
-    prioritized: List[Tuple[int, str]], info_map: Dict[str, FileInfo], headroom: float, request: str, overview: str
-) -> List[Tuple[int, str]]:
+    prioritized: list[tuple[int, str]], info_map: dict[str, FileInfo], headroom: float, request: str, overview: str
+) -> list[tuple[int, str]]:
     # prioritize shorter files within same priority
-    grouped: Dict[int, List[str]] = {}
+    grouped: dict[int, list[str]] = {}
     for pr, rel in prioritized:
         if rel in info_map and info_map[rel].content is not None:
             grouped.setdefault(pr, []).append(rel)
-    out: List[Tuple[int, str]] = []
-    texts: List[str] = [ANALYSIS_SYSTEM, request, overview]
-    for pr in sorted(grouped.keys(), reverse=True):
+    out: list[tuple[int, str]] = []
+    texts: list[str] = [ANALYSIS_SYSTEM, request, overview]
+    for pr in sorted(grouped, reverse=True):
         rels = sorted(grouped[pr], key=lambda r: len(info_map[r].content or ""))
         for r in rels:
             # try adding in batches; count tokens
@@ -192,29 +197,29 @@ def budgeted_pack(
 
 
 def fallback_mode_b(
-    seed_ranked: List[Tuple[int, str]], root: str, info_map: Dict[str, FileInfo]
-) -> List[Tuple[int, str]]:
+    seed_ranked: list[tuple[int, str]], root: str, info_map: dict[str, FileInfo]
+) -> list[tuple[int, str]]:
     # Seed with top-K
     K = min(50, len(seed_ranked))
     seeds = [r for _, r in seed_ranked[:K] if r in info_map]
     all_paths = list(info_map.keys())
-    dep_scores: Dict[str, int] = {}
+    dep_scores: dict[str, int] = {}
     for s in seeds:
         txt = info_map[s].content or ""
         refs = collect_import_refs(txt)
         paths = best_effort_resolve_refs_to_paths(refs, all_paths)
         base_pr = next((p for p, r in seed_ranked if r == s), 50)
         for p in paths:
-            dep_scores[p] = max(dep_scores.get(p, 0), max(1, base_pr - 5))
+            dep_scores[p] = max(dep_scores.get(p, 0), 1, base_pr - 5)
     # Merge seeds (keep original scores) and deps (inherited)
-    merged: Dict[str, int] = {r: p for p, r in seed_ranked}
+    merged: dict[str, int] = {r: p for p, r in seed_ranked}
     for p, sc in dep_scores.items():
         merged[p] = max(merged.get(p, 0), sc)
     ranked = sorted([(p, r) for r, p in merged.items()], key=lambda x: (-x[0], x[1]))
     return ranked
 
 
-def main(argv: Optional[List[str]] = None) -> int:
+def main(argv: Optional[list[str]] = None) -> int:
     ap = argparse.ArgumentParser(prog="vibe-analyze", description="High-recall codebase answering (CLI)")
     ap.add_argument("--request", required=True)
     ap.add_argument("--headroom", type=float, default=0.15)
@@ -260,7 +265,7 @@ def main(argv: Optional[List[str]] = None) -> int:
     # Early-fit check with headroom
     if fits_early(args.request, overview, info_map, headroom):
         # everything fits; analyze directly
-        system, cxml = cxml_bundle([(100, r) for r in info_map.keys()], info_map, args.request, overview, root)
+        system, cxml = cxml_bundle([(100, r) for r in info_map], info_map, args.request, overview, root)
         try:
             answer = analyze(system, cxml, analysis_model, args.timeout_s)
         except Exception as e:
@@ -272,14 +277,13 @@ def main(argv: Optional[List[str]] = None) -> int:
     # 4) Hierarchical selection
     st1 = stage1_select(args.request, overview, selector_model, args.timeout_s)
     # Expand stage1 globs/dirs via discovery again; pragmatic: just filter known files by matching prefix/glob
-    expanded: List[str] = []
-    from fnmatch import fnmatch
+    expanded: list[str] = []
 
     all_rels = [os.path.relpath(p, root).replace("\\", "/") for p in files]
-    for pr, pat in st1[:max_stage1]:
-        pat = pat.replace("\\", "/")
+    for _prio, pat in st1[:max_stage1]:
+        pat_norm = pat.replace("\\", "/")
         for rel in all_rels:
-            if rel.startswith(pat.rstrip("*/")) or fnmatch(rel, pat):
+            if rel.startswith(pat_norm.rstrip("*/")) or fnmatch(rel, pat_norm):
                 expanded.append(rel)
         if len(expanded) >= max_stage1:
             break
@@ -312,7 +316,7 @@ def main(argv: Optional[List[str]] = None) -> int:
         return 1
     sys.stdout.write((answer or "").strip() + "\n")
     # Diagnostics: trims are implicitly anything not included; emit verbose list
-    included = set([r for _, r in packed])
+    included = {r for _, r in packed}
     for pr, rel in prioritized:
         if rel not in included and rel in info_map:
             eprint(f"TRIMMED (low priority): {rel} [prio={pr}]")

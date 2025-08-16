@@ -1,11 +1,11 @@
 import os
-from typing import Dict, List, Tuple
+
 from .util import human_size
 
 
-def _dir_stats(root: str) -> Dict[str, Tuple[int, int]]:
-    stats: Dict[str, Tuple[int, int]] = {}
-    for dirpath, dirnames, filenames in os.walk(root):
+def _dir_stats(root: str) -> dict[str, tuple[int, int]]:
+    stats: dict[str, tuple[int, int]] = {}
+    for dirpath, _dirnames, filenames in os.walk(root):
         files = 0
         size = 0
         for fn in filenames:
@@ -23,7 +23,7 @@ def _dir_stats(root: str) -> Dict[str, Tuple[int, int]]:
 def build_compact_tree(root: str, depth: int = 4, max_lines: int = 2000) -> str:
     stats = _dir_stats(root)
     root = os.path.abspath(root)
-    lines: List[str] = []
+    lines: list[str] = []
 
     def helper(path: str, level: int):
         if level > depth:

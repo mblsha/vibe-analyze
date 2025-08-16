@@ -1,4 +1,7 @@
-from typing import List, Tuple
+"""LLM-backed selectors for hierarchical file ranking."""
+# ruff: noqa: PLR0913
+# isort: skip_file
+
 from .llm import GeminiClient
 from .util import parse_ranked_lines
 
@@ -24,7 +27,7 @@ STAGE2_SYSTEM_B = (
 )
 
 
-def stage1_select(request: str, overview: str, model: str, timeout_s: int) -> List[Tuple[int, str]]:
+def stage1_select(request: str, overview: str, model: str, timeout_s: int) -> list[tuple[int, str]]:
     client = GeminiClient(model=model, temperature=0.0, timeout_s=timeout_s)
     if not client.ready():
         return []
@@ -38,8 +41,8 @@ def stage1_select(request: str, overview: str, model: str, timeout_s: int) -> Li
 
 
 def stage2_select(
-    request: str, overview: str, candidates: List[str], model: str, mode: str, timeout_s: int
-) -> List[Tuple[int, str]]:
+    request: str, overview: str, candidates: list[str], model: str, mode: str, timeout_s: int
+) -> list[tuple[int, str]]:
     client = GeminiClient(model=model, temperature=0.0, timeout_s=timeout_s)
     if not client.ready():
         return []

@@ -1,5 +1,8 @@
 import os
 from typing import Optional
+
+import google.generativeai as genai  # type: ignore
+
 from .util import eprint
 
 
@@ -19,8 +22,6 @@ class GeminiClient:
             self._err = "Missing GOOGLE_API_KEY for Gemini API"
             return
         try:
-            import google.generativeai as genai  # type: ignore
-
             genai.configure(api_key=api_key)
             self._client = genai.GenerativeModel(self.model)
             self._ready = True

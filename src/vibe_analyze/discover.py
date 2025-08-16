@@ -1,10 +1,10 @@
 import os
 import subprocess
-from typing import List
-from .util import which_fd, DEFAULT_EXCLUDES
+
+from .util import DEFAULT_EXCLUDES, is_path_excluded, which_fd
 
 
-def _fd_cmd(root: str, excludes: List[str]) -> List[str]:
+def _fd_cmd(root: str, excludes: list[str]) -> list[str]:
     exe = which_fd()
     if not exe:
         return []
@@ -20,11 +20,9 @@ def _fd_cmd(root: str, excludes: List[str]) -> List[str]:
         return []
 
 
-def _walk_fallback(root: str, excludes: List[str]) -> List[str]:
-    from .util import is_path_excluded
-
+def _walk_fallback(root: str, excludes: list[str]) -> list[str]:
     root = os.path.abspath(root)
-    out: List[str] = []
+    out: list[str] = []
     for dirpath, dirnames, filenames in os.walk(root):
         # apply directory excludes in-place to prune
         pruned = []
@@ -45,7 +43,7 @@ def _walk_fallback(root: str, excludes: List[str]) -> List[str]:
     return out
 
 
-def discover_files(root: str, excludes: List[str] = None) -> List[str]:
+def discover_files(root: str, excludes: list[str] | None = None) -> list[str]:
     if excludes is None:
         excludes = DEFAULT_EXCLUDES
     # Try fd first
