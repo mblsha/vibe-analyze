@@ -43,7 +43,10 @@ def _walk_fallback(root: str, excludes: list[str]) -> list[str]:
     return out
 
 
-def discover_files(root: str, excludes: list[str] | None = None) -> list[str]:
+from typing import Optional
+
+
+def discover_files(root: str, excludes: Optional[list[str]] = None) -> list[str]:
     if excludes is None:
         excludes = DEFAULT_EXCLUDES
     # Try fd first

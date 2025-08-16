@@ -1,7 +1,9 @@
-try:
-    import tiktoken  # type: ignore
+from typing import Any
 
-    _ENC = tiktoken.get_encoding("cl100k_base")
+try:
+    import tiktoken
+
+    _ENC: Any = tiktoken.get_encoding("cl100k_base")
 except Exception:
     _ENC = None
 

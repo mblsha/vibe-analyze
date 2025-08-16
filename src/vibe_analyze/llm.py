@@ -1,7 +1,7 @@
 import os
-from typing import Optional
+from typing import Any, Optional
 
-import google.generativeai as genai  # type: ignore
+import google.generativeai as genai
 
 from .util import eprint
 
@@ -11,7 +11,7 @@ class GeminiClient:
         self.model = model
         self.temperature = temperature
         self.timeout_s = timeout_s
-        self._client = None
+        self._client: Optional[Any] = None
         self._ready = False
         self._err: Optional[str] = None
         self._init()
@@ -39,7 +39,9 @@ class GeminiClient:
             raise RuntimeError(self._err or "Gemini not ready")
         # google-generativeai supports system via contents with role, but expose simply
         try:
-            resp = self._client.generate_content(
+            client = self._client
+            assert client is not None
+            resp = client.generate_content(
                 [
                     {"role": "system", "parts": [{"text": system}]},
                     {"role": "user", "parts": [{"text": user}]},

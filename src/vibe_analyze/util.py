@@ -9,7 +9,7 @@ import shutil
 import sys
 from dataclasses import dataclass
 from typing import Optional
-import yaml  # type: ignore
+import yaml
 
 SECRET_BLOCKLIST_GLOBS = [
     ".env*",
